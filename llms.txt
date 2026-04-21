@@ -1,0 +1,13 @@
+# Registry-Mind V1
+
+Android 16 cognitive capture sensor (Oppo Find X9). Snap Key trigger → OCR → relay to OpenClaw desktop hub via ClawConnector.
+
+## Key Documents
+
+- [README.md](./README.md) — V1 overview and roadmap
+- [USER-NOTES.md](./USER-NOTES.md) — Decisions, performance constraints
+- [phase-1-repair.md](./phase-1-repair.md) — V1 implementation phases
+
+## Stack
+
+Kotlin 2.1 / Coroutines / ML Kit / Accessibility API / MediaProjection

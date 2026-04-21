@@ -1,0 +1,93 @@
+project_name: registry-mind
+phase: development
+progress: 105
+active_role: Developer
+chain_protocol:
+  next_action: Implement S2-02 Speech-to-Text with ML Kit for voice commands
+  next_command: bmad-continue
+  next_role: Developer
+marketing: >-
+  Android 16 cognitive sensor replacing proprietary capture tools with sovereign AI-powered screen intelligence
+product: >-
+  Zero-friction mobile capture app (Oppo Find X9) with hardware trigger, on-device OCR, and desktop sync via Tailscale
+far_vision: >-
+  Universal second-brain sensor with multi-personality support, continuous thought streaming, and bidirectional Android automation
+sprints:
+  - number: 1
+    goal: Foundation & Capture Pipeline - Scaffold project, implement Snap Key trigger, OCR pipeline, and ClawConnector
+    status: complete
+    stories:
+      - id: S1-01
+        title: Android Project Scaffold
+        status: complete
+        effort: 30 min
+        priority: P0
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-sprint-1.md
+        test_result: pass
+      - id: S1-02
+        title: Snap Key Binding & Overlay
+        status: complete
+        effort: 45 min
+        priority: P0
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-sprint-1.md
+        test_result: partial
+      - id: S1-03
+        title: RegistryIngestor Pipeline
+        status: complete
+        effort: 2h
+        priority: P0
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-sprint-1.md
+        test_result: pass
+      - id: S1-04
+        title: ClawConnector Interface
+        status: complete
+        effort: 1h
+        priority: P0
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-sprint-1.md
+        test_result: partial
+      - id: S1-05
+        title: BroadcastReceiver for Desktop Signals
+        status: complete
+        effort: 45 min
+        priority: P1
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-sprint-1.md
+        test_result: partial
+      - id: S1-06
+        title: Performance Validation
+        status: complete
+        effort: 30 min
+        priority: P0
+        tests_executed: true
+        test_output: bmad/artifacts/test-report-sprint-1.md
+        test_result: partial
+  - number: 2
+    goal: Mind-Chat & Advanced UI - Voice interaction, Liquid Button states, session management
+    status: in_progress
+    stories:
+      - id: S2-01
+        title: Mind-Chat Hold-to-Talk UI
+        status: complete
+        effort: 1h30
+        priority: P1
+        tests_executed: false
+        test_output: bmad/artifacts/stories/S2-01.md
+        test_result: pass
+      - id: S2-02
+        title: Speech-to-Text Local
+        status: pending
+        effort: 2h
+        priority: P1
+artifacts:
+  - bmad/artifacts/plan-prd.md
+  - bmad/artifacts/sprint-1.md
+  - bmad/artifacts/stories/S1-01.md
+  - bmad/artifacts/stories/S1-02.md
+  - bmad/artifacts/stories/S1-03.md
+  - bmad/artifacts/stories/S1-04.md
+  - bmad/artifacts/stories/S1-05.md
+  - bmad/artifacts/stories/S1-06.md

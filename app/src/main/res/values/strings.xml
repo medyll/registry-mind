@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Registry Mind</string>
+    <string name="capture_notification_title">Registry Mind Active</string>
+    <string name="capture_notification_text">Listening for Snap Key triggers</string>
+    <string name="action_sync">Sync Now</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
+    <string name="error_capture_failed">Capture failed</string>
+    <string name="error_sync_failed">Sync failed - will retry</string>
+    <string name="success_captured">Captured</string>
+    <string name="success_synced">Synced to OpenClaw</string>
+</resources>
