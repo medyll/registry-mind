@@ -9,6 +9,7 @@ import com.registry.mind.network.ClawConnector
 import com.registry.mind.ocr.OcrProcessor
 import com.registry.mind.screen.ScreenCapturer
 import com.registry.mind.context.AppContextScraper
+import com.registry.mind.session.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -39,6 +40,8 @@ class RegistryIngestor(private val context: Context) {
     }
     
     fun captureAndSend() {
+        val session = SessionManager.getInstance(context)
+
         if (!isReady) {
             CacheManager.storeForRetry(
                 RegistryPacket(
@@ -62,7 +65,9 @@ class RegistryIngestor(private val context: Context) {
             )
             return
         }
-        
+
+        session.resetTimeout()
+
         scope.launch {
             try {
                 val bitmap = screenCapturer.capture()
@@ -93,10 +98,7 @@ class RegistryIngestor(private val context: Context) {
                         sourceApp = sourceApp,
                         aiGuess = classifyContent(ocrResult.fullText)
                     ),
-                    navigationMeta = NavigationMeta(
-                        role = "registry_sensor",
-                        sessionState = "inactive"
-                    )
+                    navigationMeta = session.createNavigationMeta()
                 )
                 
                 val result = ClawConnector.sendPacket(packet)

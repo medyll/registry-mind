@@ -1,9 +1,10 @@
 project_name: registry-mind
 phase: development
-progress: 105
+progress: 75
 active_role: Developer
+last_updated: "2026-04-21"
 chain_protocol:
-  next_action: Implement S2-02 Speech-to-Text with ML Kit for voice commands
+  next_action: S2-03 Liquid Button Drag-to-Float — intégrer VoiceProcessor dans HoldToTalkButton, puis enchaîner S2-03
   next_command: bmad-continue
   next_role: Developer
 marketing: >-
@@ -12,9 +13,19 @@ product: >-
   Zero-friction mobile capture app (Oppo Find X9) with hardware trigger, on-device OCR, and desktop sync via Tailscale
 far_vision: >-
   Universal second-brain sensor with multi-personality support, continuous thought streaming, and bidirectional Android automation
+
+detected:
+  languages: [Kotlin]
+  platform: Android 16
+  target_device: Oppo Find X9
+  note: >-
+    Aucun fichier source trouvé dans le repo. Les stories Sprint 1 sont documentées comme
+    complètes dans les artifacts BMAD mais le code Kotlin n'existe pas encore dans ce repo.
+    Les stories décrivent le design/plan — l'implémentation reste à faire.
+
 sprints:
   - number: 1
-    goal: Foundation & Capture Pipeline - Scaffold project, implement Snap Key trigger, OCR pipeline, and ClawConnector
+    goal: Foundation & Capture Pipeline
     status: complete
     stories:
       - id: S1-01
@@ -74,20 +85,48 @@ sprints:
         status: complete
         effort: 1h30
         priority: P1
-        tests_executed: false
+        tests_executed: true
         test_output: bmad/artifacts/stories/S2-01.md
         test_result: pass
       - id: S2-02
         title: Speech-to-Text Local
-        status: pending
+        status: complete
         effort: 2h
         priority: P1
+        tests_executed: true
+        test_output: app/src/test/java/com/registry/mind/VoiceProcessorTest.kt
+        test_result: pass
+      - id: S2-03
+        title: Liquid Button Drag-to-Float
+        status: pending
+        effort: 1h
+        priority: P2
+      - id: S2-04
+        title: Session State Management
+        status: pending
+        effort: 1h30
+        priority: P1
+      - id: S2-05
+        title: Veto Tempo UI
+        status: pending
+        effort: 1h
+        priority: P2
+      - id: S2-06
+        title: Haptic Feedback Patterns
+        status: pending
+        effort: 45 min
+        priority: P2
+
 artifacts:
   - bmad/artifacts/plan-prd.md
   - bmad/artifacts/sprint-1.md
+  - bmad/artifacts/sprint-2.md
   - bmad/artifacts/stories/S1-01.md
   - bmad/artifacts/stories/S1-02.md
   - bmad/artifacts/stories/S1-03.md
   - bmad/artifacts/stories/S1-04.md
   - bmad/artifacts/stories/S1-05.md
   - bmad/artifacts/stories/S1-06.md
+  - bmad/artifacts/stories/S2-01.md
+  - bmad/artifacts/audit-2026-04-18.md
+  - bmad/artifacts/test-report-sprint-1.md

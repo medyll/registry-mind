@@ -3,85 +3,104 @@ package com.registry.mind.ui.components
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectLongPress
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import kotlinx.coroutines.delay
 
 @Composable
 fun LiquidButton(
     onCaptureTriggered: () -> Unit,
     onLongPress: () -> Unit,
+    onDrag: (dx: Float, dy: Float) -> Unit = { _, _ -> },
+    onDragEnd: () -> Unit = {},
+    isSessionActive: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    var isAnchored by remember { mutableStateOf(true) }
-    var position by remember { mutableStateOf(0f to 0f) }
     var isPressed by remember { mutableStateOf(false) }
-    
-    val infiniteTransition = rememberInfiniteTransition()
+    var isDragging by remember { mutableStateOf(false) }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 1.1f,
         animationSpec = infiniteRepeatable(
             animation = tween(1000, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse
-        )
+        ),
+        label = "pulseScale"
     )
-    
+
     Box(
-        modifier = modifier
-            .size(64.dp)
-            .scale(if (isPressed) 0.9f else pulseScale)
-            .background(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF2196F3),
-                        Color(0xFF1976D2)
-                    )
-                ),
-                shape = CircleShape
-            )
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragEnd = {
-                        if (!isAnchored) {
-                            // Snap back to edge
-                            isAnchored = true
-                        }
+        contentAlignment = Alignment.TopEnd,
+        modifier = modifier.size(72.dp) // extra space for dot
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .scale(
+                    when {
+                        isPressed -> 0.9f
+                        isDragging -> 1.05f
+                        else -> pulseScale
                     }
-                ) { change, dragAmount ->
-                    change.consume()
-                    position = (position.first + dragAmount.x) to (position.second + dragAmount.y)
-                    isAnchored = false
+                )
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF2196F3),
+                            Color(0xFF1976D2)
+                        )
+                    ),
+                    shape = CircleShape
+                )
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { isDragging = true },
+                        onDragEnd = {
+                            isDragging = false
+                            onDragEnd()
+                        },
+                        onDragCancel = {
+                            isDragging = false
+                            onDragEnd()
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            onDrag(dragAmount.x, dragAmount.y)
+                        }
+                    )
                 }
-            }
-            .pointerInput(Unit) {
-                awaitFirstGesture {
-                    detectLongPress(
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = {
+                            if (!isDragging) {
+                                isPressed = true
+                                onCaptureTriggered()
+                                isPressed = false
+                            }
+                        },
                         onLongPress = {
-                            onLongPress()
+                            if (!isDragging) onLongPress()
                         }
                     )
                 }
-            }
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    val event = awaitPointerEvent()
-                    if (event.changes.any { it.pressed }) {
-                        isPressed = true
-                    } else if (isPressed) {
-                        isPressed = false
-                        onCaptureTriggered()
-                    }
-                }
-            }
-    )
+        )
+
+        // Session active indicator — green dot, top-right corner
+        if (isSessionActive) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .background(Color(0xFF4CAF50), CircleShape)
+            )
+        }
+    }
 }
