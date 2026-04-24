@@ -5,12 +5,15 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import com.registry.mind.settings.SettingsManager
 
 object HapticFeedback {
     
     private var vibrator: Vibrator? = null
-    private var isEnabled = true
-    
+
+    /** Reads live from SettingsManager — toggle takes effect immediately. */
+    private val isEnabled: Boolean get() = SettingsManager.getHapticsEnabled()
+
     fun initialize(context: Context) {
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -19,10 +22,6 @@ object HapticFeedback {
             @Suppress("DEPRECATION")
             context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
-    }
-    
-    fun setEnabled(enabled: Boolean) {
-        isEnabled = enabled
     }
     
     fun captureInitiated() {

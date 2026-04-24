@@ -37,6 +37,9 @@ class SessionManager private constructor(private val context: Context) {
     private val _sessionActiveFlow = MutableStateFlow(false)
     val sessionActiveFlow: StateFlow<Boolean> = _sessionActiveFlow.asStateFlow()
 
+    /** Tag set via long-press radial menu. Consumed on next capture and cleared. */
+    @Volatile var currentTag: String? = null
+
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun startSession() {
@@ -81,10 +84,15 @@ class SessionManager private constructor(private val context: Context) {
 
     fun getSessionState(): String = if (isSessionActive) "active_chat" else "inactive"
 
-    fun createNavigationMeta(): NavigationMeta = NavigationMeta(
-        role = "registry_sensor",
-        sessionState = getSessionState()
-    )
+    fun createNavigationMeta(): NavigationMeta {
+        val tag = currentTag
+        currentTag = null  // consume — one-shot per capture
+        return NavigationMeta(
+            role = "registry_sensor",
+            sessionState = getSessionState(),
+            tag = tag
+        )
+    }
 
     fun wasSessionActiveOnRestart(): Boolean =
         prefs.getBoolean(KEY_SESSION_ACTIVE, false)

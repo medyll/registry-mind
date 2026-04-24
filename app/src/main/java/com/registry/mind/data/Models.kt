@@ -37,5 +37,7 @@ data class NavigationMeta(
     @SerializedName("role")
     val role: String = "registry_sensor",
     @SerializedName("session_state")
-    val sessionState: String = "inactive"
+    val sessionState: String = "inactive",
+    @SerializedName("tag")
+    val tag: String? = null
 )

@@ -7,64 +7,115 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.graphics.PixelFormat
-import android.hardware.display.DisplayManager
-import android.media.projection.MediaProjection
-import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.IBinder
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.registry.mind.R
+import com.registry.mind.haptics.HapticFeedback
+import com.registry.mind.ingestor.RegistryIngestor
 import com.registry.mind.ui.MainActivity
 import com.registry.mind.ui.overlay.CaptureOverlayManager
-import com.registry.mind.ingestor.RegistryIngestor
+import com.registry.mind.ui.overlay.GlowState
+import com.registry.mind.work.SyncManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CaptureService : Service() {
-    
+
     companion object {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "capture_service_channel"
-        
+
+        const val ACTION_START   = "com.registry.mind.START_CAPTURE"
+        const val ACTION_CAPTURE = "com.registry.mind.CAPTURE"
+        const val ACTION_STOP    = "com.registry.mind.STOP_CAPTURE"
+
         private var instance: CaptureService? = null
-        
         fun isRunning(): Boolean = instance != null
     }
-    
+
     private lateinit var windowManager: WindowManager
     private lateinit var overlayManager: CaptureOverlayManager
     private lateinit var ingestor: RegistryIngestor
-    
+
+    // Main dispatcher: overlay calls (showVetoBar etc.) must run on Main
+    private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
     override fun onCreate() {
         super.onCreate()
         instance = this
-        
+
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         overlayManager = CaptureOverlayManager(this)
         ingestor = RegistryIngestor(this)
-        
+
         createNotificationChannel()
+
+        // Ensure periodic sync safety net is active
+        SyncManager.schedulePeriodicSync(this)
     }
-    
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_START -> startForegroundService()
+            ACTION_START   -> startForegroundService()
             ACTION_CAPTURE -> startCapture()
-            ACTION_STOP -> stopService()
+            ACTION_STOP    -> stopService()
         }
         return START_STICKY
     }
-    
+
     private fun startForegroundService() {
-        val notification = createNotification()
-        startForeground(NOTIFICATION_ID, notification)
+        startForeground(NOTIFICATION_ID, createNotification())
     }
-    
+
+    /**
+     * Full capture flow:
+     *  1. Haptic tick + peripheral glow
+     *  2. captureOnly() on IO (screenshot + OCR)
+     *  3. Show VetoTempoBar
+     *  4a. onCommit → sendPacket → haptic success / error
+     *  4b. onVeto   → discard silently
+     */
     private fun startCapture() {
-        overlayManager.showPeripheralGlow()
-        ingestor.captureAndSend()
+        HapticFeedback.captureInitiated()
+        overlayManager.showPeripheralGlow(GlowState.CAPTURING)
+
+        serviceScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                ingestor.captureOnly()
+            }
+
+            result.onSuccess { packet ->
+                overlayManager.showVetoBar(
+                    onCommit = {
+                        serviceScope.launch(Dispatchers.IO) {
+                            ingestor.sendPacket(packet)
+                                .onSuccess {
+                                    HapticFeedback.syncSuccessful()
+                                    overlayManager.showPeripheralGlow(GlowState.SYNCED)
+                                }
+                                .onFailure {
+                                    HapticFeedback.errorOccurred()
+                                    overlayManager.showPeripheralGlow(GlowState.ERROR)
+                                }
+                        }
+                    },
+                    onVeto = {
+                        // Packet discarded — no send, no glow
+                    }
+                )
+            }.onFailure {
+                HapticFeedback.errorOccurred()
+                overlayManager.showPeripheralGlow(GlowState.ERROR)
+            }
+        }
     }
-    
+
     private fun createNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.capture_notification_title))
@@ -74,7 +125,7 @@ class CaptureService : Service() {
             .setContentIntent(createPendingIntent())
             .build()
     }
-    
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -85,39 +136,32 @@ class CaptureService : Service() {
                 description = "Background service for screen capture"
                 setShowBadge(false)
             }
-            
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(channel)
+            getSystemService(NotificationManager::class.java)
+                .createNotificationChannel(channel)
         }
     }
-    
+
     private fun createPendingIntent(): PendingIntent {
         val intent = Intent(this, MainActivity::class.java)
         return PendingIntent.getActivity(
-            this,
-            0,
-            intent,
+            this, 0, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
-    
+
     private fun stopService() {
-        overlayManager.hideOverlay()
+        overlayManager.cleanup()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
-    
+
     override fun onBind(intent: Intent?): IBinder? = null
-    
+
     override fun onDestroy() {
         super.onDestroy()
         instance = null
+        serviceScope.cancel()
         overlayManager.cleanup()
-    }
-    
-    companion object {
-        const val ACTION_START = "com.registry.mind.START_CAPTURE"
-        const val ACTION_CAPTURE = "com.registry.mind.CAPTURE"
-        const val ACTION_STOP = "com.registry.mind.STOP_CAPTURE"
+        ingestor.cleanup()
     }
 }
