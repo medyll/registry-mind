@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gradle --version)",
+      "PowerShell(Invoke-WebRequest -Uri \"https://github.com/gradle/gradle/raw/v8.9.0/gradle/wrapper/gradle-wrapper.jar\" -OutFile \"D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar\" -UseBasicParsing; if \\(Test-Path \"D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar\"\\) { \"Downloaded OK: $\\(\\(Get-Item 'D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar'\\).Length\\) bytes\" } else { \"FAILED\" })"
+    ]
+  }
+}
