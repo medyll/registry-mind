@@ -114,7 +114,7 @@ class RegistryIngestor(private val context: Context) {
         val session = SessionManager.getInstance(context)
 
         if (!isReady) {
-            CacheManager.storeForRetry(
+            scope.launch { CacheManager.storeForRetry(
                 RegistryPacket(
                     header = Header(
                         protocol = "registry-mind-v1",
@@ -133,7 +133,7 @@ class RegistryIngestor(private val context: Context) {
                         sessionState = "error_not_initialized"
                     )
                 )
-            )
+            ) }
             return
         }
 

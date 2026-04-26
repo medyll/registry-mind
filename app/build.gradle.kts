@@ -2,16 +2,17 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
     namespace = "com.registry.mind"
-    compileSdk = 37
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.registry.mind"
-        minSdk = 37
-        targetSdk = 37
+        minSdk = 24
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
 
@@ -45,10 +46,6 @@ android {
 
     buildFeatures {
         compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
     }
 
     packaging {

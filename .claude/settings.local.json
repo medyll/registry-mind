@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(gradle --version)",
-      "PowerShell(Invoke-WebRequest -Uri \"https://github.com/gradle/gradle/raw/v8.9.0/gradle/wrapper/gradle-wrapper.jar\" -OutFile \"D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar\" -UseBasicParsing; if \\(Test-Path \"D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar\"\\) { \"Downloaded OK: $\\(\\(Get-Item 'D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar'\\).Length\\) bytes\" } else { \"FAILED\" })"
+      "PowerShell(Invoke-WebRequest -Uri \"https://github.com/gradle/gradle/raw/v8.9.0/gradle/wrapper/gradle-wrapper.jar\" -OutFile \"D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar\" -UseBasicParsing; if \\(Test-Path \"D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar\"\\) { \"Downloaded OK: $\\(\\(Get-Item 'D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar'\\).Length\\) bytes\" } else { \"FAILED\" })",
+      "PowerShell(Invoke-WebRequest -Uri 'https://github.com/gradle/gradle/raw/v8.9.0/gradle/wrapper/gradle-wrapper.jar' -OutFile 'D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar' -UseBasicParsing; \\(Get-Item 'D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar'\\).Length)",
+      "PowerShell(Add-Type -Assembly \"System.IO.Compression.FileSystem\"; $zip = [System.IO.Compression.ZipFile]::OpenRead\\(\"D:\\\\development\\\\registry-mind\\\\gradle\\\\wrapper\\\\gradle-wrapper.jar\"\\); $zip.Entries | Select-Object FullName; $zip.Dispose\\(\\))",
+      "PowerShell(Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/gradle/gradle/v8.9.0/gradlew' -OutFile 'D:\\\\development\\\\registry-mind\\\\gradlew' -UseBasicParsing; \\(Get-Item 'D:\\\\development\\\\registry-mind\\\\gradlew'\\).Length)"
     ]
   }
 }

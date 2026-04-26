@@ -1,5 +1,6 @@
 package com.registry.mind.audio
 
+import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
 import java.io.File
@@ -7,7 +8,7 @@ import java.io.IOException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class AudioRecorder(private val outputDir: File) {
+class AudioRecorder(private val context: Context, private val outputDir: File) {
     
     private var mediaRecorder: MediaRecorder? = null
     private var currentOutputFile: File? = null
@@ -18,7 +19,7 @@ class AudioRecorder(private val outputDir: File) {
             currentOutputFile = File(outputDir, "voice_${System.currentTimeMillis()}.m4a")
             
             mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                MediaRecorder(outputDir.context)
+                MediaRecorder(context)
             } else {
                 @Suppress("DEPRECATION")
                 MediaRecorder()

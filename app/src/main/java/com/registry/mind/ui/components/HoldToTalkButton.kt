@@ -7,8 +7,11 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -76,7 +79,7 @@ fun HoldToTalkButton(
             .pointerInput(state) {
                 if (state == HoldToTalkState.IDLE || state == HoldToTalkState.LISTENING) {
                     detectDragGestures(
-                        onDragStart = {
+                        onDragStart = { _: Offset ->
                             if (state == HoldToTalkState.IDLE) {
                                 state = HoldToTalkState.LISTENING
                                 onRecordingStart()
@@ -85,8 +88,7 @@ fun HoldToTalkButton(
                         onDragEnd = {
                             if (state == HoldToTalkState.LISTENING) {
                                 state = HoldToTalkState.PROCESSING
-                                // Simulate processing delay
-                                kotlinx.coroutines.GlobalScope.launch {
+                                GlobalScope.launch {
                                     delay(1000)
                                     currentAudioFile?.let { file ->
                                         onRecordingStop(file)
@@ -95,7 +97,8 @@ fun HoldToTalkButton(
                                     onProcessingComplete()
                                 }
                             }
-                        }
+                        },
+                        onDrag = { _, _ -> }
                     )
                 }
             }

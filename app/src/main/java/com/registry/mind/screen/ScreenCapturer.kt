@@ -2,6 +2,7 @@ package com.registry.mind.screen
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.Image
@@ -9,6 +10,8 @@ import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.Looper
+import android.util.DisplayMetrics
+import android.view.Display
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -30,12 +33,15 @@ class ScreenCapturer(private val context: Context) {
         }
         
         val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-        val display = displayManager.getDisplay(DisplayManager.DEFAULT_DISPLAY)
+        val display = displayManager.getDisplay(Display.DEFAULT_DISPLAY)
+
+        @Suppress("DEPRECATION")
+        val metrics = DisplayMetrics().also { display?.getMetrics(it) }
+        val width = metrics.widthPixels
+        val height = metrics.heightPixels
+        val density = metrics.densityDpi
         
-        val width = display.width
-        val height = display.height
-        val density = display.densityDpi
-        
+        if (display == null) { continuation.resume(null); return@suspendCancellableCoroutine }
         imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
         
         virtualDisplay = mediaProjection!!.createVirtualDisplay(
