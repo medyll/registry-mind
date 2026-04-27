@@ -22,7 +22,7 @@ object SettingsManager {
     private const val KEY_HAPTICS_ENABLED = "haptics_enabled"
     private const val KEY_MODEL_URL       = "model_url"
 
-    const val DEFAULT_ENDPOINT  = "http://openiris-desktop.tailscale.net:8080"
+    const val DEFAULT_ENDPOINT  = "http://mydde-pc.tail70869a.ts.net"
     const val DEFAULT_MODEL_URL = "https://huggingface.co/medyll/gemma-2b-it-q4/resolve/main/gemma-2b-it-q4.bin"
     private const val DEFAULT_TIMEOUT = 30
 
