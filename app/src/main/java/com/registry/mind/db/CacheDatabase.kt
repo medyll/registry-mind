@@ -27,7 +27,7 @@ interface CachedPacketDao {
     suspend fun incrementRetry(id: String)
 }
 
-@Database(entities = [CachedPacket::class, EnrichedEntry::class], version = 2, exportSchema = false)
+@Database(entities = [CachedPacket::class, EnrichedEntry::class], version = 3, exportSchema = false)
 abstract class CacheDatabase : RoomDatabase() {
     abstract fun packetDao(): CachedPacketDao
     abstract fun enrichedEntryDao(): EnrichedEntryDao

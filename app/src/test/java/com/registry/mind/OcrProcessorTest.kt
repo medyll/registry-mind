@@ -1,8 +1,8 @@
 package com.registry.mind.ocr
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class OcrProcessorTest {
     

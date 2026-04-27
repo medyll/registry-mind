@@ -1,7 +1,7 @@
 package com.registry.mind.context
 
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import kotlin.test.assertEquals
 
 class AppContextScraperTest {
     

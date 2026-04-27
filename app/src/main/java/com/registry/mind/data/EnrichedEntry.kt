@@ -8,6 +8,7 @@ data class EnrichedEntry(
     @PrimaryKey val id: String,
     val rawText: String,
     val summary: String,
+    val rewrite: String? = null,
     val sourceApp: String,
     val tag: String?,
     val timestamp: Long = System.currentTimeMillis(),

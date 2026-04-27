@@ -1,11 +1,11 @@
 package com.registry.mind
 
-import org.junit.Test
-import com.registry.mind.data.*
 import com.google.gson.Gson
+import com.registry.mind.data.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Test
 import java.time.Instant
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class RegistryPacketTest {
     
