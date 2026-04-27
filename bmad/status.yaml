@@ -1,10 +1,10 @@
 project_name: registry-mind
 phase: development
-progress: 95
+progress: 98
 active_role: Developer
 last_updated: "2026-04-27"
 chain_protocol:
-  next_action: "Sprint 4 complete — plan Sprint 5 (UI for enriched entries, export connector impls, or model management)"
+  next_action: "Sprint 5 complete — plan Sprint 6 (ClawConnector ExportConnector impl, README, release prep) or bmad-audit"
   next_command: bmad-sprint
   next_role: Scrum Master
 
@@ -120,6 +120,16 @@ sprints:
         effort: 1h30
         priority: P1
 
+  - number: 5
+    goal: On-device LLM wiring & Entries UI
+    status: complete
+    stories:
+      - { id: S5-01, title: Fix double-capture — RegistryIngestor.processPacket() + CaptureService, status: complete, test_result: pass, priority: P0 }
+      - { id: S5-02, title: LocalLlm init in CaptureService, status: complete, test_result: pass, priority: P0 }
+      - { id: S5-03, title: First-launch model download + progress UI, status: complete, test_result: pass, priority: P0 }
+      - { id: S5-04, title: EntriesScreen — LazyColumn of EnrichedEntry cards, status: complete, test_result: pass, priority: P1 }
+      - { id: S5-05, title: Tests Sprint 5 — 42 tests pass, status: complete, test_result: pass, priority: P1 }
+
 artifacts:
   - bmad/artifacts/plan-prd.md
   - bmad/artifacts/sprint-1.md
@@ -128,3 +138,4 @@ artifacts:
   - bmad/artifacts/audit-2026-04-18.md
   - bmad/artifacts/test-report-sprint-1.md
   - bmad/artifacts/test-results-S4-06.md
+  - bmad/artifacts/sprint-2026-04-27.md
