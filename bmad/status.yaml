@@ -1,12 +1,12 @@
 project_name: registry-mind
 phase: development
-progress: 75
-active_role: Architect
+progress: 95
+active_role: Developer
 last_updated: "2026-04-27"
 chain_protocol:
-  next_action: "Planifier Sprint 4 — on-device LLM, refactor RegistryIngestor, ExportConnector interface"
-  next_command: bmad-continue
-  next_role: Developer
+  next_action: "Sprint 4 complete — plan Sprint 5 (UI for enriched entries, export connector impls, or model management)"
+  next_command: bmad-sprint
+  next_role: Scrum Master
 
 marketing: >-
   Android cognitive sensor with fully sovereign on-device AI processing — no cloud dependency.
@@ -76,55 +76,47 @@ sprints:
 
   - number: 4
     goal: On-device LLM — local-first AI enrichment pipeline
-    status: planned
+    status: complete
     stories:
       - id: S4-01
         title: LocalLlm — MediaPipe wrapper (init, summarize, rewrite)
-        status: pending
+        status: complete
+        test_result: pass
         effort: 2h
         priority: P0
-        notes: >-
-          MediaPipe LLM Inference API + Gemma 2B-IT Q4. Init async au démarrage.
-          API: summarize(text): String, rewrite(text, instruction): String.
 
       - id: S4-02
         title: Refactor RegistryIngestor — brancher LLM, supprimer sendPacket du flow principal
-        status: pending
+        status: complete
+        test_result: pass
         effort: 2h
         priority: P0
-        notes: >-
-          flow: captureOnly() → OcrProcessor → LocalLlm.summarize() → enrichir EnrichedEntry →
-          stocker en DB. sendPacket() reste mais n'est plus appelé automatiquement.
 
       - id: S4-03
         title: EnrichedEntry — Room DB local pour résultats LLM
-        status: pending
+        status: complete
+        test_result: pass
         effort: 1h30
         priority: P0
-        notes: >-
-          Nouvelle entité Room: rawText, summary, rewrite, tags, timestamp, sourceApp.
-          Remplace RegistryPacket comme unité de stockage primaire.
 
       - id: S4-04
         title: ExportConnector — interface agnostique (pas d'impl)
-        status: pending
+        status: complete
+        test_result: pass
         effort: 1h
         priority: P1
-        notes: >-
-          interface ExportConnector { suspend fun export(entry: EnrichedEntry): Result<Unit> }.
-          ClawConnector implémentera cette interface plus tard. Aucun connecteur activé par défaut.
 
       - id: S4-05
         title: ModelDownloadManager — téléchargement Gemma au premier lancement
-        status: pending
+        status: complete
+        test_result: pass
         effort: 2h
         priority: P0
-        notes: >-
-          Download ~1.3GB vers filesDir. Progress dans UI. Hash check. Retry sur échec réseau.
 
       - id: S4-06
         title: Tests LocalLlm + RegistryIngestor refactorisé
-        status: pending
+        status: complete
+        test_result: pass
         effort: 1h30
         priority: P1
 
@@ -135,3 +127,4 @@ artifacts:
   - bmad/artifacts/stories/S2-01.md
   - bmad/artifacts/audit-2026-04-18.md
   - bmad/artifacts/test-report-sprint-1.md
+  - bmad/artifacts/test-results-S4-06.md
