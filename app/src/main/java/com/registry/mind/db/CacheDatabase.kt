@@ -2,6 +2,7 @@ package com.registry.mind.db
 
 import android.content.Context
 import androidx.room.*
+import com.registry.mind.data.EnrichedEntry
 
 @Entity(tableName = "cached_packets")
 data class CachedPacket(
@@ -26,9 +27,10 @@ interface CachedPacketDao {
     suspend fun incrementRetry(id: String)
 }
 
-@Database(entities = [CachedPacket::class], version = 1, exportSchema = false)
+@Database(entities = [CachedPacket::class, EnrichedEntry::class], version = 2, exportSchema = false)
 abstract class CacheDatabase : RoomDatabase() {
     abstract fun packetDao(): CachedPacketDao
+    abstract fun enrichedEntryDao(): EnrichedEntryDao
 
     companion object {
         @Volatile private var instance: CacheDatabase? = null

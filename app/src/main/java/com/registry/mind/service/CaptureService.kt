@@ -94,19 +94,13 @@ class CaptureService : Service() {
                 overlayManager.showVetoBar(
                     onCommit = {
                         serviceScope.launch(Dispatchers.IO) {
-                            ingestor.sendPacket(packet)
-                                .onSuccess {
-                                    HapticFeedback.syncSuccessful()
-                                    overlayManager.showPeripheralGlow(GlowState.SYNCED)
-                                }
-                                .onFailure {
-                                    HapticFeedback.errorOccurred()
-                                    overlayManager.showPeripheralGlow(GlowState.ERROR)
-                                }
+                            ingestor.captureAndProcess()
+                            HapticFeedback.syncSuccessful()
+                            overlayManager.showPeripheralGlow(GlowState.SYNCED)
                         }
                     },
                     onVeto = {
-                        // Packet discarded — no send, no glow
+                        // Discarded — no processing
                     }
                 )
             }.onFailure {

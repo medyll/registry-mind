@@ -1,132 +1,137 @@
 project_name: registry-mind
 phase: development
 progress: 75
-active_role: Developer
-last_updated: "2026-04-21"
+active_role: Architect
+last_updated: "2026-04-27"
 chain_protocol:
-  next_action: S2-03 Liquid Button Drag-to-Float — intégrer VoiceProcessor dans HoldToTalkButton, puis enchaîner S2-03
+  next_action: "Planifier Sprint 4 — on-device LLM, refactor RegistryIngestor, ExportConnector interface"
   next_command: bmad-continue
   next_role: Developer
+
 marketing: >-
-  Android 16 cognitive sensor replacing proprietary capture tools with sovereign AI-powered screen intelligence
+  Android cognitive sensor with fully sovereign on-device AI processing — no cloud dependency.
+  Surpasses OEM MindSpace apps by enriching captured content locally and exporting to any platform.
+
 product: >-
-  Zero-friction mobile capture app (Oppo Find X9) with hardware trigger, on-device OCR, and desktop sync via Tailscale
+  Local-first capture app (Oppo Find X9): Snap Key → OCR → on-device LLM (MediaPipe/Gemma)
+  → enriched local storage → agnostic export layer. No remote LLM calls. NPU-accelerated.
+
 far_vision: >-
-  Universal second-brain sensor with multi-personality support, continuous thought streaming, and bidirectional Android automation
+  Universal second-brain sensor: local AI enrichment pipeline, pluggable export connectors
+  (OpenClaw, API, filesystem, cloud), multi-device sync, continuous thought streaming.
+
+architecture_pivot:
+  date: "2026-04-27"
+  summary: >-
+    Remote LLM processing (OpenClaw server-side) cancelled. All AI enrichment moves on-device
+    via MediaPipe + Gemma 2B-IT (NPU-accelerated). ClawConnector demoted from primary flow
+    to one of many future ExportConnector implementations. Architecture becomes local-first,
+    export-agnostic.
+  old_flow: "capture → OCR → send raw packet → remote LLM → sync back"
+  new_flow: "capture → OCR → LocalLlm.process() → local DB → [optional export]"
+  deprecated_as_primary:
+    - ClawConnector (sendPacket)
+    - SyncWorker (réseau comme flow principal)
+    - RegistryPacket.aiGuess (rempli localement, plus renvoyé à serveur)
 
 detected:
   languages: [Kotlin]
-  platform: Android 16
-  target_device: Oppo Find X9
-  note: >-
-    Aucun fichier source trouvé dans le repo. Les stories Sprint 1 sont documentées comme
-    complètes dans les artifacts BMAD mais le code Kotlin n'existe pas encore dans ce repo.
-    Les stories décrivent le design/plan — l'implémentation reste à faire.
+  platform: Android (minSdk 24, targetSdk 35)
+  target_device: Oppo Find X9 (Snapdragon NPU — Hexagon)
+  llm_backend: MediaPipe LLM Inference API (Gemma 2B-IT Q4 / Phi-3-mini INT4)
 
 sprints:
   - number: 1
     goal: Foundation & Capture Pipeline
     status: complete
     stories:
-      - id: S1-01
-        title: Android Project Scaffold
-        status: complete
-        effort: 30 min
-        priority: P0
-        tests_executed: true
-        test_output: bmad/artifacts/test-report-sprint-1.md
-        test_result: pass
-      - id: S1-02
-        title: Snap Key Binding & Overlay
-        status: complete
-        effort: 45 min
-        priority: P0
-        tests_executed: true
-        test_output: bmad/artifacts/test-report-sprint-1.md
-        test_result: partial
-      - id: S1-03
-        title: RegistryIngestor Pipeline
-        status: complete
-        effort: 2h
-        priority: P0
-        tests_executed: true
-        test_output: bmad/artifacts/test-report-sprint-1.md
-        test_result: pass
-      - id: S1-04
-        title: ClawConnector Interface
-        status: complete
-        effort: 1h
-        priority: P0
-        tests_executed: true
-        test_output: bmad/artifacts/test-report-sprint-1.md
-        test_result: partial
-      - id: S1-05
-        title: BroadcastReceiver for Desktop Signals
-        status: complete
-        effort: 45 min
-        priority: P1
-        tests_executed: true
-        test_output: bmad/artifacts/test-report-sprint-1.md
-        test_result: partial
-      - id: S1-06
-        title: Performance Validation
-        status: complete
-        effort: 30 min
-        priority: P0
-        tests_executed: true
-        test_output: bmad/artifacts/test-report-sprint-1.md
-        test_result: partial
+      - { id: S1-01, title: Android Project Scaffold, status: complete, test_result: pass }
+      - { id: S1-02, title: Snap Key Binding & Overlay, status: complete, test_result: partial }
+      - { id: S1-03, title: RegistryIngestor Pipeline, status: complete, test_result: pass }
+      - { id: S1-04, title: ClawConnector Interface, status: complete, test_result: partial }
+      - { id: S1-05, title: BroadcastReceiver for Desktop Signals, status: complete, test_result: partial }
+      - { id: S1-06, title: Performance Validation, status: complete, test_result: partial }
+
   - number: 2
-    goal: Mind-Chat & Advanced UI - Voice interaction, Liquid Button states, session management
-    status: in_progress
+    goal: Mind-Chat & Advanced UI
+    status: complete
     stories:
-      - id: S2-01
-        title: Mind-Chat Hold-to-Talk UI
-        status: complete
-        effort: 1h30
-        priority: P1
-        tests_executed: true
-        test_output: bmad/artifacts/stories/S2-01.md
-        test_result: pass
-      - id: S2-02
-        title: Speech-to-Text Local
-        status: complete
+      - { id: S2-01, title: Mind-Chat Hold-to-Talk UI, status: complete, test_result: pass }
+      - { id: S2-02, title: Speech-to-Text Local (VoiceProcessor), status: complete, test_result: pass }
+      - { id: S2-03, title: Liquid Button Drag-to-Float, status: complete, test_result: pass }
+      - { id: S2-04, title: Session State Management, status: complete, test_result: pass }
+      - { id: S2-05, title: Veto Tempo UI, status: complete, test_result: pass }
+      - { id: S2-06, title: Haptic Feedback Patterns, status: complete, test_result: pass }
+
+  - number: 3
+    goal: Connectivity, Security & Polish
+    status: complete
+    stories:
+      - { id: S3-01, title: "Auth Key → SettingsManager (EncryptedSharedPreferences)", status: complete, test_result: pass }
+      - { id: S3-02, title: WorkManager retry + connectivity constraints, status: complete, test_result: pass }
+      - { id: S3-03, title: "Endpoint config Tailscale / IP fallback", status: complete, test_result: pass }
+      - { id: S3-04, title: "PeripheralGlow color-coded (Blue/Green/Red)", status: complete, test_result: pass }
+      - { id: S3-05, title: "Long-press radial menu (Urgent/Personal/Work)", status: complete, test_result: pass }
+      - { id: S3-06, title: "Tests ClawConnector + RegistryIngestor", status: complete, test_result: pass }
+
+  - number: 4
+    goal: On-device LLM — local-first AI enrichment pipeline
+    status: planned
+    stories:
+      - id: S4-01
+        title: LocalLlm — MediaPipe wrapper (init, summarize, rewrite)
+        status: pending
         effort: 2h
-        priority: P1
-        tests_executed: true
-        test_output: app/src/test/java/com/registry/mind/VoiceProcessorTest.kt
-        test_result: pass
-      - id: S2-03
-        title: Liquid Button Drag-to-Float
+        priority: P0
+        notes: >-
+          MediaPipe LLM Inference API + Gemma 2B-IT Q4. Init async au démarrage.
+          API: summarize(text): String, rewrite(text, instruction): String.
+
+      - id: S4-02
+        title: Refactor RegistryIngestor — brancher LLM, supprimer sendPacket du flow principal
+        status: pending
+        effort: 2h
+        priority: P0
+        notes: >-
+          flow: captureOnly() → OcrProcessor → LocalLlm.summarize() → enrichir EnrichedEntry →
+          stocker en DB. sendPacket() reste mais n'est plus appelé automatiquement.
+
+      - id: S4-03
+        title: EnrichedEntry — Room DB local pour résultats LLM
+        status: pending
+        effort: 1h30
+        priority: P0
+        notes: >-
+          Nouvelle entité Room: rawText, summary, rewrite, tags, timestamp, sourceApp.
+          Remplace RegistryPacket comme unité de stockage primaire.
+
+      - id: S4-04
+        title: ExportConnector — interface agnostique (pas d'impl)
         status: pending
         effort: 1h
-        priority: P2
-      - id: S2-04
-        title: Session State Management
+        priority: P1
+        notes: >-
+          interface ExportConnector { suspend fun export(entry: EnrichedEntry): Result<Unit> }.
+          ClawConnector implémentera cette interface plus tard. Aucun connecteur activé par défaut.
+
+      - id: S4-05
+        title: ModelDownloadManager — téléchargement Gemma au premier lancement
+        status: pending
+        effort: 2h
+        priority: P0
+        notes: >-
+          Download ~1.3GB vers filesDir. Progress dans UI. Hash check. Retry sur échec réseau.
+
+      - id: S4-06
+        title: Tests LocalLlm + RegistryIngestor refactorisé
         status: pending
         effort: 1h30
         priority: P1
-      - id: S2-05
-        title: Veto Tempo UI
-        status: pending
-        effort: 1h
-        priority: P2
-      - id: S2-06
-        title: Haptic Feedback Patterns
-        status: pending
-        effort: 45 min
-        priority: P2
 
 artifacts:
   - bmad/artifacts/plan-prd.md
   - bmad/artifacts/sprint-1.md
   - bmad/artifacts/sprint-2.md
-  - bmad/artifacts/stories/S1-01.md
-  - bmad/artifacts/stories/S1-02.md
-  - bmad/artifacts/stories/S1-03.md
-  - bmad/artifacts/stories/S1-04.md
-  - bmad/artifacts/stories/S1-05.md
-  - bmad/artifacts/stories/S1-06.md
   - bmad/artifacts/stories/S2-01.md
   - bmad/artifacts/audit-2026-04-18.md
   - bmad/artifacts/test-report-sprint-1.md

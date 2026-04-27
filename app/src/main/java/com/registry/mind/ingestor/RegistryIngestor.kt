@@ -6,7 +6,9 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.media.projection.MediaProjectionManager
 import com.registry.mind.data.*
-import com.registry.mind.network.ClawConnector
+import com.registry.mind.db.CacheDatabase
+import com.registry.mind.export.ExportConnector
+import com.registry.mind.llm.LocalLlm
 import com.registry.mind.ocr.OcrProcessor
 import com.registry.mind.screen.ScreenCapturer
 import com.registry.mind.context.AppContextScraper
@@ -17,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.util.UUID
 
 class RegistryIngestor(private val context: Context) {
 
@@ -24,6 +27,10 @@ class RegistryIngestor(private val context: Context) {
     private val screenCapturer = ScreenCapturer(context)
     private val ocrProcessor = OcrProcessor()
     private val contextScraper = AppContextScraper(context)
+    private val db = CacheDatabase.get(context)
+
+    var localLlm: LocalLlm? = null
+    val exportConnectors = mutableListOf<ExportConnector>()
 
     private var isReady = false
 
@@ -41,16 +48,51 @@ class RegistryIngestor(private val context: Context) {
     }
 
     /**
-     * Capture screen + OCR. Returns a ready-to-send RegistryPacket.
-     * Must be called from a background dispatcher (IO).
+     * Main entry point. Capture → OCR → LLM enrich → store locally.
+     * Export connectors run async after storage.
      */
-    suspend fun captureOnly(): Result<RegistryPacket> {
+    fun captureAndProcess() {
+        if (!isReady) return
+        val session = SessionManager.getInstance(context)
+        session.resetTimeout()
+
+        scope.launch {
+            captureOnly()
+                .onSuccess { packet -> processAndStore(packet) }
+                .onFailure { /* silent — OCR failure non-critical */ }
+        }
+    }
+
+    private suspend fun processAndStore(packet: RegistryPacket) {
+        val rawText = packet.payload.ocrContent
+        if (rawText.isBlank()) return
+
+        val summary = localLlm?.takeIf { it.isReady }?.summarize(rawText) ?: rawText.take(200)
         val session = SessionManager.getInstance(context)
 
-        if (!isReady) {
-            return Result.failure(IllegalStateException("not_initialized"))
-        }
+        val entry = EnrichedEntry(
+            id = UUID.randomUUID().toString(),
+            rawText = rawText,
+            summary = summary,
+            sourceApp = packet.payload.sourceApp,
+            tag = packet.navigationMeta.tag,
+            timestamp = System.currentTimeMillis()
+        )
 
+        db.enrichedEntryDao().insert(entry)
+
+        // fire-and-forget export
+        exportConnectors.forEach { connector ->
+            scope.launch {
+                connector.export(entry)
+            }
+        }
+    }
+
+    /** Raw capture + OCR. Returns RegistryPacket with ocrContent populated. */
+    suspend fun captureOnly(): Result<RegistryPacket> {
+        val session = SessionManager.getInstance(context)
+        if (!isReady) return Result.failure(IllegalStateException("not_initialized"))
         session.resetTimeout()
 
         return try {
@@ -76,7 +118,7 @@ class RegistryIngestor(private val context: Context) {
                     imageData = bitmapToBase64(bitmap),
                     ocrContent = ocrResult.fullText,
                     sourceApp = sourceApp,
-                    aiGuess = classifyContent(ocrResult.fullText)
+                    aiGuess = null
                 ),
                 navigationMeta = session.createNavigationMeta()
             )
@@ -89,104 +131,14 @@ class RegistryIngestor(private val context: Context) {
         }
     }
 
-    /**
-     * Send a previously captured packet to ClawConnector.
-     * Caches on failure. Must be called from a background dispatcher (IO).
-     */
-    suspend fun sendPacket(packet: RegistryPacket): Result<Unit> {
-        return try {
-            val result = ClawConnector.sendPacket(packet)
-            result.fold(
-                onSuccess = { Result.success(Unit) },
-                onFailure = { error ->
-                    CacheManager.storeForRetry(packet)
-                    Result.failure(error)
-                }
-            )
-        } catch (e: Exception) {
-            CacheManager.storeForRetry(packet)
-            Result.failure(e)
-        }
-    }
-
-    /** Convenience: capture + send in one shot (used by legacy call sites). */
-    fun captureAndSend() {
-        val session = SessionManager.getInstance(context)
-
-        if (!isReady) {
-            scope.launch { CacheManager.storeForRetry(
-                RegistryPacket(
-                    header = Header(
-                        protocol = "registry-mind-v1",
-                        device = "Oppo_Find_X9_Native",
-                        timestamp = Instant.now().toString(),
-                        authToken = SettingsManager.getAuthToken()
-                    ),
-                    payload = Payload(
-                        imageData = "",
-                        ocrContent = "",
-                        sourceApp = context.packageName,
-                        aiGuess = null
-                    ),
-                    navigationMeta = NavigationMeta(
-                        role = "registry_sensor",
-                        sessionState = "error_not_initialized"
-                    )
-                )
-            ) }
-            return
-        }
-
-        session.resetTimeout()
-
-        scope.launch {
-            captureOnly()
-                .onSuccess { packet -> sendPacket(packet) }
-                .onFailure { e -> CacheManager.storeForRetry(createEmptyPacket("ingestor_error: ${e.message}")) }
-        }
-    }
-
-    private fun createEmptyPacket(error: String): RegistryPacket = RegistryPacket(
-        header = Header(
-            protocol = "registry-mind-v1",
-            device = "Oppo_Find_X9_Native",
-            timestamp = Instant.now().toString(),
-            authToken = SettingsManager.getAuthToken()
-        ),
-        payload = Payload(
-            imageData = "",
-            ocrContent = "",
-            sourceApp = context.packageName,
-            aiGuess = null
-        ),
-        navigationMeta = NavigationMeta(
-            role = "registry_sensor",
-            sessionState = "error:$error"
-        )
-    )
-
-    private fun classifyContent(ocrText: String): String? = when {
-        ocrText.contains("invoice", ignoreCase = true) ||
-        ocrText.contains("facture", ignoreCase = true) ||
-        ocrText.contains("receipt", ignoreCase = true) -> "finance_document"
-        ocrText.contains("meeting", ignoreCase = true) ||
-        ocrText.contains("calendar", ignoreCase = true) -> "work_meeting"
-        ocrText.contains("recipe", ignoreCase = true) ||
-        ocrText.contains("ingredients", ignoreCase = true) -> "personal_recipe"
-        ocrText.contains("flight", ignoreCase = true) ||
-        ocrText.contains("hotel", ignoreCase = true) ||
-        ocrText.contains("booking", ignoreCase = true) -> "travel"
-        else -> null
+    fun cleanup() {
+        screenCapturer.release()
+        ocrProcessor.close()
     }
 
     private fun bitmapToBase64(bitmap: Bitmap): String {
         val byteArray = java.io.ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.WEBP, 85, byteArray)
         return android.util.Base64.encodeToString(byteArray.toByteArray(), android.util.Base64.NO_WRAP)
-    }
-
-    fun cleanup() {
-        screenCapturer.release()
-        ocrProcessor.close()
     }
 }

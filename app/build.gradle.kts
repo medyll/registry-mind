@@ -75,6 +75,9 @@ dependencies {
 
     // ML Kit OCR
     implementation("com.google.mlkit:text-recognition:16.0.0")
+
+    // On-device LLM (MediaPipe)
+    implementation("com.google.mediapipe:tasks-genai:0.10.14")
     // ML Kit Speech-to-Text (for Sprint 2)
     // implementation("com.google.mlkit:speech-recognition:17.0.1")
 
