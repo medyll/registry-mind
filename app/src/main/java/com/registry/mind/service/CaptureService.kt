@@ -14,6 +14,8 @@ import androidx.core.app.NotificationCompat
 import com.registry.mind.R
 import com.registry.mind.haptics.HapticFeedback
 import com.registry.mind.ingestor.RegistryIngestor
+import com.registry.mind.llm.LocalLlm
+import com.registry.mind.llm.ModelDownloadManager
 import com.registry.mind.ui.MainActivity
 import com.registry.mind.ui.overlay.CaptureOverlayManager
 import com.registry.mind.ui.overlay.GlowState
@@ -42,6 +44,7 @@ class CaptureService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var overlayManager: CaptureOverlayManager
     private lateinit var ingestor: RegistryIngestor
+    private var localLlm: LocalLlm? = null
 
     // Main dispatcher: overlay calls (showVetoBar etc.) must run on Main
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -55,9 +58,21 @@ class CaptureService : Service() {
         ingestor = RegistryIngestor(this)
 
         createNotificationChannel()
-
-        // Ensure periodic sync safety net is active
         SyncManager.schedulePeriodicSync(this)
+        initLocalLlmIfReady()
+    }
+
+    private fun initLocalLlmIfReady() {
+        val modelFile = ModelDownloadManager(this).modelFile
+        if (!modelFile.exists()) return
+        serviceScope.launch(Dispatchers.Default) {
+            val llm = LocalLlm(this@CaptureService)
+            runCatching { llm.init(modelFile) }
+                .onSuccess {
+                    localLlm = llm
+                    ingestor.localLlm = llm
+                }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -94,7 +109,7 @@ class CaptureService : Service() {
                 overlayManager.showVetoBar(
                     onCommit = {
                         serviceScope.launch(Dispatchers.IO) {
-                            ingestor.captureAndProcess()
+                            ingestor.processPacket(packet)
                             HapticFeedback.syncSuccessful()
                             overlayManager.showPeripheralGlow(GlowState.SYNCED)
                         }
@@ -157,5 +172,6 @@ class CaptureService : Service() {
         serviceScope.cancel()
         overlayManager.cleanup()
         ingestor.cleanup()
+        localLlm?.close()
     }
 }

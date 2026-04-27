@@ -63,6 +63,8 @@ class RegistryIngestor(private val context: Context) {
         }
     }
 
+    suspend fun processPacket(packet: RegistryPacket) = processAndStore(packet)
+
     private suspend fun processAndStore(packet: RegistryPacket) {
         val rawText = packet.payload.ocrContent
         if (rawText.isBlank()) return
