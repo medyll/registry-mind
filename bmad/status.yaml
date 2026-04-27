@@ -4,7 +4,7 @@ progress: 98
 active_role: Developer
 last_updated: "2026-04-27"
 chain_protocol:
-  next_action: "Sprint 5 complete — plan Sprint 6 (ClawConnector ExportConnector impl, README, release prep) or bmad-audit"
+  next_action: "Audit complete — plan Sprint 6 (ClawConnector as ExportConnector, bitmap encode lazy, README, release prep)"
   next_command: bmad-sprint
   next_role: Scrum Master
 
