@@ -17,6 +17,7 @@ import com.registry.mind.settings.SettingsManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.UUID
@@ -29,7 +30,7 @@ class RegistryIngestor(private val context: Context) {
     private val contextScraper = AppContextScraper(context)
     private val db = CacheDatabase.get(context)
 
-    var localLlm: LocalLlm? = null
+    @Volatile var localLlm: LocalLlm? = null
     val exportConnectors = mutableListOf<ExportConnector>()
 
     private var isReady = false
@@ -134,6 +135,7 @@ class RegistryIngestor(private val context: Context) {
     }
 
     fun cleanup() {
+        scope.cancel()
         screenCapturer.release()
         ocrProcessor.close()
     }

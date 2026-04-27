@@ -4,6 +4,7 @@ import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -29,6 +30,11 @@ class ModelDownloadManager(private val context: Context) {
                 connect()
             }
 
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                connection.disconnect()
+                return@withContext Result.failure(IOException("HTTP ${connection.responseCode}"))
+            }
+
             val totalBytes = connection.contentLengthLong.takeIf { it > 0 } ?: -1L
             val tmpFile = File(context.filesDir, "$MODEL_FILENAME.tmp")
 
@@ -45,7 +51,10 @@ class ModelDownloadManager(private val context: Context) {
                 }
             }
 
-            tmpFile.renameTo(modelFile)
+            if (!tmpFile.renameTo(modelFile)) {
+                tmpFile.delete()
+                return@withContext Result.failure(IOException("rename failed"))
+            }
             Result.success(modelFile)
         } catch (e: Exception) {
             Result.failure(e)

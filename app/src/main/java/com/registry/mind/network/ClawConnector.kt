@@ -1,6 +1,7 @@
 package com.registry.mind.network
 
 import android.content.Context
+import com.registry.mind.BuildConfig
 import com.registry.mind.data.RegistryPacket
 import com.registry.mind.settings.SettingsManager
 import okhttp3.OkHttpClient
@@ -25,7 +26,8 @@ object ClawConnector {
 
     private fun recreateClient() {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
+                    else HttpLoggingInterceptor.Level.NONE
         }
 
         val client = OkHttpClient.Builder()

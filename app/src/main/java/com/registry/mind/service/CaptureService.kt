@@ -37,7 +37,7 @@ class CaptureService : Service() {
         const val ACTION_CAPTURE = "com.registry.mind.CAPTURE"
         const val ACTION_STOP    = "com.registry.mind.STOP_CAPTURE"
 
-        private var instance: CaptureService? = null
+        @Volatile private var instance: CaptureService? = null
         fun isRunning(): Boolean = instance != null
     }
 
@@ -93,7 +93,7 @@ class CaptureService : Service() {
      *  1. Haptic tick + peripheral glow
      *  2. captureOnly() on IO (screenshot + OCR)
      *  3. Show VetoTempoBar
-     *  4a. onCommit → sendPacket → haptic success / error
+     *  4a. onCommit → processPacket(packet) → haptic success / error
      *  4b. onVeto   → discard silently
      */
     private fun startCapture() {
