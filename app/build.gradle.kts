@@ -92,9 +92,8 @@ dependencies {
     implementation("androidx.security:security-crypto-ktx:1.1.0-alpha06")
 
     // Room DB
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.4")
 
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")

@@ -80,9 +80,10 @@ fun MainScreen(onShowEntries: () -> Unit = {}) {
             progress = downloadProgress,
             error = downloadError,
             onStart = {
+                val modelUrl = SettingsManager.getModelUrl()
+                if (modelUrl.isBlank()) return@ModelDownloadDialog
                 downloadError = null
                 scope.launch {
-                    val modelUrl = SettingsManager.getModelUrl()
                     downloadManager.download(modelUrl) { p -> downloadProgress = p }
                         .onSuccess {
                             modelReady = true
@@ -278,6 +279,9 @@ private fun ModelDownloadDialog(
     onStart: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val modelUrl = com.registry.mind.settings.SettingsManager.getModelUrl()
+    val hasUrl = modelUrl.isNotBlank()
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("AI Model Required") },
@@ -287,7 +291,16 @@ private fun ModelDownloadDialog(
                     "Gemma 2B-IT (~1.3 GB) needed for on-device summarization.",
                     style = MaterialTheme.typography.bodyMedium
                 )
-                if (progress > 0f && error == null) {
+                if (!hasUrl) {
+                    Text(
+                        "Download from Kaggle, then push with adb:\n" +
+                        "adb push model.bin /data/data/com.registry.mind/files/gemma-2b-it-q4.bin\n\n" +
+                        "Or set a direct URL in Settings.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (hasUrl && progress > 0f && error == null) {
                     LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier.fillMaxWidth()
@@ -305,12 +318,14 @@ private fun ModelDownloadDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onStart, enabled = progress == 0f || error != null) {
-                Text(if (error != null) "Retry" else "Download")
+            if (hasUrl) {
+                Button(onClick = onStart, enabled = progress == 0f || error != null) {
+                    Text(if (error != null) "Retry" else "Download")
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Later") }
+            TextButton(onClick = onDismiss) { Text("OK") }
         }
     )
 }

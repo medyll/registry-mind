@@ -23,7 +23,9 @@ object SettingsManager {
     private const val KEY_MODEL_URL       = "model_url"
 
     const val DEFAULT_ENDPOINT  = "http://mydde-pc.tail70869a.ts.net"
-    const val DEFAULT_MODEL_URL = "https://huggingface.co/medyll/gemma-2b-it-q4/resolve/main/gemma-2b-it-q4.bin"
+    // Real source: https://www.kaggle.com/models/google/gemma/tfLite/gemma-2b-it-gpu-int4
+    // Download manually and push: adb push model.bin /data/data/com.registry.mind/files/gemma-2b-it-q4.bin
+    const val DEFAULT_MODEL_URL = ""
     private const val DEFAULT_TIMEOUT = 30
 
     private lateinit var prefs: SharedPreferences
