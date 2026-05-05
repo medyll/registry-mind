@@ -4,9 +4,38 @@ progress: 98
 active_role: Developer
 last_updated: "2026-04-27"
 chain_protocol:
-  next_action: "Audit complete — plan Sprint 6 (ClawConnector as ExportConnector, bitmap encode lazy, README, release prep)"
+  next_action: "Pipeline audit 2026-05-05 — Sprint 6 must fix 4 pipeline blockers before any feature work"
   next_command: bmad-sprint
   next_role: Scrum Master
+
+pipeline_audit:
+  date: "2026-05-05"
+  verdict: non_functional
+  blockers:
+    - id: P1
+      desc: "SnapKeyService.isSnapKeyClick() is a stub — never fires on Oppo Find X9 hardware button"
+      file: "SnapKeyService.kt"
+    - id: P2
+      desc: "No bridge between SnapKeyService (ACTION_SNAP_KEY_SINGLE) and CaptureService (ACTION_CAPTURE)"
+      file: "SnapKeyService.kt"
+    - id: P3
+      desc: "MediaProjection never obtained — ScreenCapturer.capture() always returns null"
+      files: ["CaptureService.kt", "PermissionActivity.kt", "RegistryIngestor.kt"]
+    - id: P4
+      desc: "CaptureService never started when snap fires — chicken-and-egg with P1+P2"
+      file: "SnapKeyService.kt"
+  secondary:
+    - desc: "isConfigured gates on auth token — irrelevant in local-first mode (2026-04-27 pivot)"
+      file: "MainActivity.kt / SettingsManager.kt"
+    - desc: "DEFAULT_ENDPOINT still points to Tailscale MagicDNS despite local-first pivot"
+      file: "SettingsManager.kt"
+  sprint6_stories_required:
+    - "Fix SnapKeyService hardware detection (onKeyEvent + correct X9 keycode)"
+    - "Bridge SnapKey → CaptureService start + ACTION_CAPTURE"
+    - "MediaProjection permission flow wired to ingestor.initialize()"
+    - "Revisit isConfigured for local-first (model ready + permissions, not auth token)"
+    - "Update or remove Tailscale DEFAULT_ENDPOINT"
+    - "Carry forward audit-2026-04-27 C1-C3 fixes"
 
 marketing: >-
   Android cognitive sensor with fully sovereign on-device AI processing — no cloud dependency.

@@ -40,21 +40,33 @@ Foundation, UI, Connectivity, Security — all stories pass.
 | S5-04 EntriesScreen — LazyColumn captures view | ✅ pass |
 | S5-05 Tests — 42 tests, 0 failures | ✅ pass |
 
-## What works end-to-end
-- Snap Key → capture → VetoBar → processPacket() (same screenshot, no double-capture)
-- CaptureService inits LocalLlm async if Gemma model present
-- First launch: ModelDownloadDialog triggers ~1.3GB Gemma download with progress
-- EntriesScreen: browse enriched captures (summary, tag, sourceApp, timestamp, export status)
-- Settings: endpoint, auth token, haptics, model URL
+## What actually works (2026-05-05 verification)
+- UI renders, Settings persist, Room DB schema correct
+- ModelDownloadManager download flow works
+- EntriesScreen correctly reads DB — empty because nothing is ever inserted
 
-## What's left for release
-- ClawConnector as `ExportConnector` impl (HTTP POST enriched entry)
-- README / CHANGELOG
-- Performance validation (NFR-01: <100ms wake, <350ms OCR)
+## ⚠️ Pipeline NOT functional — 4 blockers found (audit-2026-05-05)
+
+Previous "works end-to-end" claim was incorrect. Snap → capture → DB is fully broken:
+
+| # | Blocker | File |
+|---|---------|------|
+| P1 | `SnapKeyService.isSnapKeyClick()` stub — never fires on hardware | `SnapKeyService.kt` |
+| P2 | No bridge SnapKey → CaptureService (wrong action names) | `SnapKeyService.kt` |
+| P3 | MediaProjection never obtained — `capture()` always returns null | `CaptureService.kt`, `PermissionActivity.kt` |
+| P4 | CaptureService never started on snap press | `SnapKeyService.kt` |
+
+Also: `isConfigured` gates on auth token — irrelevant in local-first mode. Tailscale still default endpoint despite 2026-04-27 pivot decision.
+
+## Sprint 6 — Required (glue code, not features)
+- Fix SnapKeyService hardware detection (`onKeyEvent`, correct X9 keycode)
+- Bridge SnapKey → CaptureService start + ACTION_CAPTURE
+- MediaProjection permission flow wired to `ingestor.initialize()`
+- Revisit `isConfigured` logic for local-first
+- Carry forward audit-2026-04-27 C1–C3 fixes
 
 ## Next Action
-**Sprint 6** — ClawConnector ExportConnector impl + release prep, or `bmad-audit` first.
-`bmad-sprint`
+`bmad-sprint` → Sprint 6 with P0 pipeline blockers first.
 
 ---
-*BMAD — Last updated: 2026-04-27 (Sprint 5 complete — full LLM pipeline wired, 42 tests pass)*
+*BMAD — Last updated: 2026-05-05 (audit: pipeline non-functional, 4 blockers, sprint 6 scoped)*
