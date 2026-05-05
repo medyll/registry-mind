@@ -1,6 +1,7 @@
 package com.registry.mind.llm
 
 import android.content.Context
+import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -60,6 +61,36 @@ class ModelDownloadManager(private val context: Context) {
             Result.failure(e)
         }
     }
+
+    suspend fun copyFromUri(uri: Uri, onProgress: (Float) -> Unit = {}): Result<File> =
+        withContext(Dispatchers.IO) {
+            try {
+                val tmpFile = File(context.filesDir, "$MODEL_FILENAME.tmp")
+                val totalBytes = context.contentResolver.openFileDescriptor(uri, "r")
+                    ?.use { it.statSize.takeIf { s -> s > 0 } } ?: -1L
+                context.contentResolver.openInputStream(uri)
+                    ?: return@withContext Result.failure(IOException("cannot open source"))
+                context.contentResolver.openInputStream(uri)!!.use { input ->
+                    tmpFile.outputStream().use { output ->
+                        val buffer = ByteArray(8192)
+                        var copied = 0L
+                        var read: Int
+                        while (input.read(buffer).also { read = it } != -1) {
+                            output.write(buffer, 0, read)
+                            copied += read
+                            if (totalBytes > 0) onProgress(copied.toFloat() / totalBytes)
+                        }
+                    }
+                }
+                if (!tmpFile.renameTo(modelFile)) {
+                    tmpFile.delete()
+                    return@withContext Result.failure(IOException("rename failed"))
+                }
+                Result.success(modelFile)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
 
     fun delete() = modelFile.delete()
 }

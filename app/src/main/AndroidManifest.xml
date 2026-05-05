@@ -51,6 +51,11 @@
             android:theme="@style/Theme.RegistryMind"
             android:parentActivityName=".ui.MainActivity" />
 
+        <activity
+            android:name=".PermissionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.RegistryMind" />
+
         <service
             android:name=".service.CaptureService"
             android:exported="false"

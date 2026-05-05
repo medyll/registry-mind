@@ -31,17 +31,28 @@ object SettingsManager {
     private lateinit var prefs: SharedPreferences
 
     fun initialize(context: Context) {
-        val masterKey = MasterKey.Builder(context.applicationContext)
+        prefs = createEncryptedPrefs(context.applicationContext)
+    }
+
+    private fun createEncryptedPrefs(appContext: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(appContext)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
-
-        prefs = EncryptedSharedPreferences.create(
-            context.applicationContext,
-            PREFS_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+        return try {
+            EncryptedSharedPreferences.create(
+                appContext, PREFS_NAME, masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (_: Exception) {
+            // Corrupted keystore (reinstall with different signing key) — wipe and start fresh
+            appContext.deleteSharedPreferences(PREFS_NAME)
+            EncryptedSharedPreferences.create(
+                appContext, PREFS_NAME, masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        }
     }
 
     // --- Auth token ---

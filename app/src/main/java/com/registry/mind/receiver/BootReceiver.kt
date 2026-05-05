@@ -3,23 +3,16 @@ package com.registry.mind.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.registry.mind.service.CaptureService
+import com.registry.mind.work.SyncManager
 
 class BootReceiver : BroadcastReceiver() {
     
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
             intent.action == "android.intent.action.QUICKBOOT_POWERON") {
-            
-            val serviceIntent = Intent(context, CaptureService::class.java).apply {
-                action = CaptureService.ACTION_START
-            }
-            
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
+            // MediaProjection FGS cannot be started at boot — requires live user consent.
+            // Accessibility service (SnapKeyService) auto-restores via system settings.
+            SyncManager.scheduleOneTimeSync(context)
         }
     }
 }

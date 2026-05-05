@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,6 +63,24 @@ fun MainScreen(onShowEntries: () -> Unit = {}) {
     var downloadProgress by remember { mutableStateOf(0f) }
     var downloadError by remember { mutableStateOf<String?>(null) }
 
+    val pickFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        downloadError = null
+        downloadProgress = 0f
+        scope.launch {
+            downloadManager.copyFromUri(uri) { p -> downloadProgress = p }
+                .onSuccess {
+                    modelReady = true
+                    showDownloadDialog = false
+                    downloadProgress = 0f
+                }
+                .onFailure { e ->
+                    downloadError = e.message ?: "Copy failed"
+                    downloadProgress = 0f
+                }
+        }
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -95,6 +115,7 @@ fun MainScreen(onShowEntries: () -> Unit = {}) {
                         }
                 }
             },
+            onPickFile = { pickFileLauncher.launch("*/*") },
             onDismiss = { showDownloadDialog = false }
         )
     }
@@ -277,6 +298,7 @@ private fun ModelDownloadDialog(
     progress: Float,
     error: String?,
     onStart: () -> Unit,
+    onPickFile: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val modelUrl = com.registry.mind.settings.SettingsManager.getModelUrl()
@@ -293,9 +315,7 @@ private fun ModelDownloadDialog(
                 )
                 if (!hasUrl) {
                     Text(
-                        "Download from Kaggle, then push with adb:\n" +
-                        "adb push model.bin /data/data/com.registry.mind/files/gemma-2b-it-q4.bin\n\n" +
-                        "Or set a direct URL in Settings.",
+                        "Download gemma-2b-it-gpu-int4.bin from Kaggle, then pick it below.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -318,14 +338,19 @@ private fun ModelDownloadDialog(
             }
         },
         confirmButton = {
-            if (hasUrl) {
-                Button(onClick = onStart, enabled = progress == 0f || error != null) {
-                    Text(if (error != null) "Retry" else "Download")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onPickFile, enabled = progress == 0f || error != null) {
+                    Text("Pick file")
+                }
+                if (hasUrl) {
+                    Button(onClick = onStart, enabled = progress == 0f || error != null) {
+                        Text(if (error != null) "Retry URL" else "Download URL")
+                    }
                 }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("OK") }
+            TextButton(onClick = onDismiss) { Text("Later") }
         }
     )
 }

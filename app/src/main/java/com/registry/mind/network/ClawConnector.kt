@@ -45,7 +45,7 @@ object ClawConnector {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl(SettingsManager.getEndpointUrl())
+            .baseUrl(SettingsManager.getEndpointUrl().trimEnd('/') + "/")
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

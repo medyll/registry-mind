@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.view.WindowManager
@@ -81,11 +82,20 @@ class CaptureService : Service() {
             ACTION_CAPTURE -> startCapture()
             ACTION_STOP    -> stopService()
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun startForegroundService() {
-        startForeground(NOTIFICATION_ID, createNotification())
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(NOTIFICATION_ID, createNotification(),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+            } else {
+                startForeground(NOTIFICATION_ID, createNotification())
+            }
+        } catch (e: Exception) {
+            stopSelf()
+        }
     }
 
     /**
